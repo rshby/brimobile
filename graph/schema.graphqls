@@ -3,6 +3,7 @@
 # https://gqlgen.com/getting-started/
 
 type LoginResponse {
+  loginAt: String!
   accessToken: String!
   refreshToken: String!
 }
@@ -19,8 +20,23 @@ type AccountResponse {
   pass: String!
 }
 
+type InqAccountSaving{
+  accountNumber: String!
+  availableBalance: String!
+  accountType: String!
+  branchCode: String!
+  currency: String!
+  openingDate: String!
+  productGroup: String!
+  productName: String!
+  status: String!
+  currentBalance: String!
+  shortName: String!
+}
+
 type Query{
   account(uname: String!): AccountResponse!
+  inqAccountSaving(accountNumber: String!): InqAccountSaving!
 }
 
 type Mutation {

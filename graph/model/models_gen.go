@@ -14,6 +14,20 @@ type CreateAccountResponse struct {
 	Pass  string `json:"pass"`
 }
 
+type InqAccountSaving struct {
+	AccountNumber    string `json:"accountNumber"`
+	AvailableBalance string `json:"availableBalance"`
+	AccountType      string `json:"accountType"`
+	BranchCode       string `json:"branchCode"`
+	Currency         string `json:"currency"`
+	OpeningDate      string `json:"openingDate"`
+	ProductGroup     string `json:"productGroup"`
+	ProductName      string `json:"productName"`
+	Status           string `json:"status"`
+	CurrentBalance   string `json:"currentBalance"`
+	ShortName        string `json:"shortName"`
+}
+
 type LoginResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
