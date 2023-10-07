@@ -34,6 +34,12 @@ type InqAccountSaving{
   shortName: String!
 }
 
+input InsertSavingRequest{
+  accountNumber: String!
+  shortName: String!
+  cbal: String!
+}
+
 type Query{
   account(uname: String!): AccountResponse!
   inqAccountSaving(accountNumber: String!): InqAccountSaving!
@@ -43,4 +49,5 @@ type Mutation {
   createAccount(uname: String!, pass: String!): CreateAccountResponse!
   login(uname: String!, pass: String!, idNum: String!, deviceId: String!): LoginResponse!
   logout(refresh_token: String!): String!
+  insertSaving(input: InsertSavingRequest!): InqAccountSaving!
 }

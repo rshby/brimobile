@@ -1,11 +1,15 @@
 package graph
 
-import "brimobile/app/account/service"
+import (
+	acc "brimobile/app/account/service"
+	saving "brimobile/app/saving/service"
+)
 
 // This file will not be regenerated automatically.
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	AccService service.IAccountService
+	AccService    acc.IAccountService
+	SavingService saving.ISavingService
 }

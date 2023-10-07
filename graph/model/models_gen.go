@@ -28,7 +28,14 @@ type InqAccountSaving struct {
 	ShortName        string `json:"shortName"`
 }
 
+type InsertSavingRequest struct {
+	AccountNumber string `json:"accountNumber"`
+	ShortName     string `json:"shortName"`
+	Cbal          string `json:"cbal"`
+}
+
 type LoginResponse struct {
+	LoginAt      string `json:"loginAt"`
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }

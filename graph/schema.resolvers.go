@@ -7,7 +7,6 @@ package graph
 import (
 	"brimobile/graph/model"
 	"context"
-	"time"
 )
 
 // CreateAccount is the resolver for the createAccount field.
@@ -25,6 +24,11 @@ func (r *mutationResolver) Logout(ctx context.Context, refreshToken string) (str
 	return r.AccService.Logout(ctx, refreshToken)
 }
 
+// InsertSaving is the resolver for the insertSaving field.
+func (r *mutationResolver) InsertSaving(ctx context.Context, input model.InsertSavingRequest) (*model.InqAccountSaving, error) {
+	return r.SavingService.Insert(ctx, input)
+}
+
 // Account is the resolver for the account field.
 func (r *queryResolver) Account(ctx context.Context, uname string) (*model.AccountResponse, error) {
 	return r.AccService.Account(ctx, uname)
@@ -32,19 +36,7 @@ func (r *queryResolver) Account(ctx context.Context, uname string) (*model.Accou
 
 // InqAccountSaving is the resolver for the inqAccountSaving field.
 func (r *queryResolver) InqAccountSaving(ctx context.Context, accountNumber string) (*model.InqAccountSaving, error) {
-	return &model.InqAccountSaving{
-		AccountNumber:    "045202000001809",
-		AvailableBalance: "100.00",
-		AccountType:      "S",
-		BranchCode:       "0452",
-		Currency:         "USD",
-		OpeningDate:      time.Now().Format("2006-01-02"),
-		ProductGroup:     "10001",
-		ProductName:      "Britama Saving",
-		Status:           "Active",
-		CurrentBalance:   "100.00",
-		ShortName:        "REO SAHOBBY",
-	}, nil
+	return r.AccService.InqAccountSaving(ctx, accountNumber)
 }
 
 // Mutation returns MutationResolver implementation.

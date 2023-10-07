@@ -75,11 +75,13 @@ type ComplexityRoot struct {
 
 	LoginResponse struct {
 		AccessToken  func(childComplexity int) int
+		LoginAt      func(childComplexity int) int
 		RefreshToken func(childComplexity int) int
 	}
 
 	Mutation struct {
 		CreateAccount func(childComplexity int, uname string, pass string) int
+		InsertSaving  func(childComplexity int, input model.InsertSavingRequest) int
 		Login         func(childComplexity int, uname string, pass string, idNum string, deviceID string) int
 		Logout        func(childComplexity int, refreshToken string) int
 	}
@@ -94,6 +96,7 @@ type MutationResolver interface {
 	CreateAccount(ctx context.Context, uname string, pass string) (*model.CreateAccountResponse, error)
 	Login(ctx context.Context, uname string, pass string, idNum string, deviceID string) (*model.LoginResponse, error)
 	Logout(ctx context.Context, refreshToken string) (string, error)
+	InsertSaving(ctx context.Context, input model.InsertSavingRequest) (*model.InqAccountSaving, error)
 }
 type QueryResolver interface {
 	Account(ctx context.Context, uname string) (*model.AccountResponse, error)
@@ -245,6 +248,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LoginResponse.AccessToken(childComplexity), true
 
+	case "LoginResponse.loginAt":
+		if e.complexity.LoginResponse.LoginAt == nil {
+			break
+		}
+
+		return e.complexity.LoginResponse.LoginAt(childComplexity), true
+
 	case "LoginResponse.refreshToken":
 		if e.complexity.LoginResponse.RefreshToken == nil {
 			break
@@ -263,6 +273,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateAccount(childComplexity, args["uname"].(string), args["pass"].(string)), true
+
+	case "Mutation.insertSaving":
+		if e.complexity.Mutation.InsertSaving == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_insertSaving_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.InsertSaving(childComplexity, args["input"].(model.InsertSavingRequest)), true
 
 	case "Mutation.login":
 		if e.complexity.Mutation.Login == nil {
@@ -319,7 +341,9 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
-	inputUnmarshalMap := graphql.BuildUnmarshalerMap()
+	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputInsertSavingRequest,
+	)
 	first := true
 
 	switch rc.Operation.Operation {
@@ -456,6 +480,21 @@ func (ec *executionContext) field_Mutation_createAccount_args(ctx context.Contex
 		}
 	}
 	args["pass"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_insertSaving_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.InsertSavingRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNInsertSavingRequest2brimobileᚋgraphᚋmodelᚐInsertSavingRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -1347,6 +1386,50 @@ func (ec *executionContext) fieldContext_InqAccountSaving_shortName(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _LoginResponse_loginAt(ctx context.Context, field graphql.CollectedField, obj *model.LoginResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LoginResponse_loginAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LoginAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LoginResponse_loginAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LoginResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LoginResponse_accessToken(ctx context.Context, field graphql.CollectedField, obj *model.LoginResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_LoginResponse_accessToken(ctx, field)
 	if err != nil {
@@ -1537,6 +1620,8 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "loginAt":
+				return ec.fieldContext_LoginResponse_loginAt(ctx, field)
 			case "accessToken":
 				return ec.fieldContext_LoginResponse_accessToken(ctx, field)
 			case "refreshToken":
@@ -1608,6 +1693,85 @@ func (ec *executionContext) fieldContext_Mutation_logout(ctx context.Context, fi
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_logout_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_insertSaving(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_insertSaving(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().InsertSaving(rctx, fc.Args["input"].(model.InsertSavingRequest))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InqAccountSaving)
+	fc.Result = res
+	return ec.marshalNInqAccountSaving2ᚖbrimobileᚋgraphᚋmodelᚐInqAccountSaving(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_insertSaving(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accountNumber":
+				return ec.fieldContext_InqAccountSaving_accountNumber(ctx, field)
+			case "availableBalance":
+				return ec.fieldContext_InqAccountSaving_availableBalance(ctx, field)
+			case "accountType":
+				return ec.fieldContext_InqAccountSaving_accountType(ctx, field)
+			case "branchCode":
+				return ec.fieldContext_InqAccountSaving_branchCode(ctx, field)
+			case "currency":
+				return ec.fieldContext_InqAccountSaving_currency(ctx, field)
+			case "openingDate":
+				return ec.fieldContext_InqAccountSaving_openingDate(ctx, field)
+			case "productGroup":
+				return ec.fieldContext_InqAccountSaving_productGroup(ctx, field)
+			case "productName":
+				return ec.fieldContext_InqAccountSaving_productName(ctx, field)
+			case "status":
+				return ec.fieldContext_InqAccountSaving_status(ctx, field)
+			case "currentBalance":
+				return ec.fieldContext_InqAccountSaving_currentBalance(ctx, field)
+			case "shortName":
+				return ec.fieldContext_InqAccountSaving_shortName(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InqAccountSaving", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_insertSaving_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -3658,6 +3822,53 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputInsertSavingRequest(ctx context.Context, obj interface{}) (model.InsertSavingRequest, error) {
+	var it model.InsertSavingRequest
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"accountNumber", "shortName", "cbal"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "accountNumber":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountNumber"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AccountNumber = data
+		case "shortName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("shortName"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ShortName = data
+		case "cbal":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cbal"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Cbal = data
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -3864,6 +4075,11 @@ func (ec *executionContext) _LoginResponse(ctx context.Context, sel ast.Selectio
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("LoginResponse")
+		case "loginAt":
+			out.Values[i] = ec._LoginResponse_loginAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "accessToken":
 			out.Values[i] = ec._LoginResponse_accessToken(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3933,6 +4149,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "logout":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_logout(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "insertSaving":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_insertSaving(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -4435,6 +4658,11 @@ func (ec *executionContext) marshalNInqAccountSaving2ᚖbrimobileᚋgraphᚋmode
 		return graphql.Null
 	}
 	return ec._InqAccountSaving(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNInsertSavingRequest2brimobileᚋgraphᚋmodelᚐInsertSavingRequest(ctx context.Context, v interface{}) (model.InsertSavingRequest, error) {
+	res, err := ec.unmarshalInputInsertSavingRequest(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {

@@ -88,7 +88,7 @@ func (a *AccountService) Login(ctx context.Context, uname string, pass string, i
 
 	// return response
 	return &model.LoginResponse{
-		accToken, refreshTkn,
+		time.Now().Format("2006-01-02 15:04:05"), accToken, refreshTkn,
 	}, nil
 }
 
@@ -112,4 +112,8 @@ func (a *AccountService) Account(ctx context.Context, uname string) (*model.Acco
 		Uname: account.Uname,
 		Pass:  account.Pass,
 	}, nil
+}
+
+func (a *AccountService) InqAccountSaving(ctx context.Context, accountNumber string) (*model.InqAccountSaving, error) {
+	return nil, nil
 }
