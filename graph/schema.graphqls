@@ -1,0 +1,30 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type LoginResponse {
+  accessToken: String!
+  refreshToken: String!
+}
+
+type CreateAccountResponse {
+  id : Int!
+  uname: String!
+  pass: String!
+}
+
+type AccountResponse {
+  id: Int!
+  uname: String!
+  pass: String!
+}
+
+type Query{
+  account(uname: String!): AccountResponse!
+}
+
+type Mutation {
+  createAccount(uname: String!, pass: String!): CreateAccountResponse!
+  login(uname: String!, pass: String!, idNum: String!, deviceId: String!): LoginResponse!
+  logout(refresh_token: String!): String!
+}
