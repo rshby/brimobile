@@ -41,5 +41,8 @@ INSERT INTO accounts(uname, pass, access_token, refresh_token) VALUES
                                                                    ('reo', '123', null, null);
 
 INSERT INTO saving (account_number, account_type, branch_code, short_name, currency, cbal, hold, opening_date, product_group, product_name, status) VALUES
-                ('045202000001809', 'S', '0999', 'deo', 'USD', '500.00', '00.00', '2020-10-10 10:00:00', '10001', 'Britama Saving', '1'),
-                ('045202000001808', 'S', '0999', 'reo', 'USD', '500.00', '00.00', '2020-10-10 10:00:00', '10001', 'Britama Saving', '1');
+                ('045202000001809', 'S', '0999', 'DEOTAMA GUNANSA', 'USD', '500.00', '00.00', '2020-10-10 10:00:00', '10001', 'Britama Saving', '1'),
+                ('045202000001808', 'S', '0999', 'REO SAHOBBY', 'USD', '500.00', '00.00', '2020-10-10 10:00:00', '10001', 'Britama Saving', '1');
+
+
+INSERT INTO brinjournalseq(branch_code, joirnalseq) VALUES ('09999', 1);

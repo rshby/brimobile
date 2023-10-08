@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -71,5 +72,16 @@ func (s *SavingRepository) GetByAccountNumber(ctx context.Context, wg *sync.Wait
 }
 
 func (s *SavingRepository) UpdateCbal(ctx context.Context, wg *sync.WaitGroup, errChan chan error, accountNumber string, cbal float64) {
+	defer wg.Done()
 
+	query := "UPDATE saving set cbal=$1 where account_number=$2"
+
+	_, err := s.DB.ExecContext(ctx, query, fmt.Sprintf("%.7f", cbal), accountNumber)
+	if err != nil {
+		errChan <- err
+		return
+	}
+
+	// success update
+	errChan <- nil
 }

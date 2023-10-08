@@ -3,6 +3,7 @@ package main
 import (
 	"brimobile/app/account/repository"
 	"brimobile/app/account/service"
+	brinjournalRepo "brimobile/app/brinjournal/repository"
 	repository2 "brimobile/app/saving/repository"
 	savingService "brimobile/app/saving/service"
 	"brimobile/db/connection"
@@ -40,7 +41,7 @@ func main() {
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
 		AccService:    service.NewAccountService(repository.NewAccountRepository(db)),
-		SavingService: savingService.NewSavingService(repository2.NewSavingRepository(db)),
+		SavingService: savingService.NewSavingService(repository2.NewSavingRepository(db), brinjournalRepo.NewBrinJournalRepository(db)),
 	}}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/graphql"))
