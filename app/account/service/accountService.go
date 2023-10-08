@@ -113,7 +113,3 @@ func (a *AccountService) Account(ctx context.Context, uname string) (*model.Acco
 		Pass:  account.Pass,
 	}, nil
 }
-
-func (a *AccountService) InqAccountSaving(ctx context.Context, accountNumber string) (*model.InqAccountSaving, error) {
-	return nil, nil
-}

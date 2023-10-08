@@ -29,8 +29,13 @@ func (s *SavingRepository) Insert(ctx context.Context, entity *saving.Saving) (*
 		return nil, err
 	}
 
+	saving, err := s.GetByAccountNumber(ctx, entity.AccountNumber)
+	if err != nil {
+		return nil, err
+	}
+
 	// success insert
-	return entity, nil
+	return saving, nil
 }
 
 func (s *SavingRepository) GetByAccountNumber(ctx context.Context, accountNumber string) (*saving.Saving, error) {

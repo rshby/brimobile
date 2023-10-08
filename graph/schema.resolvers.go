@@ -36,7 +36,7 @@ func (r *queryResolver) Account(ctx context.Context, uname string) (*model.Accou
 
 // InqAccountSaving is the resolver for the inqAccountSaving field.
 func (r *queryResolver) InqAccountSaving(ctx context.Context, accountNumber string) (*model.InqAccountSaving, error) {
-	return r.AccService.InqAccountSaving(ctx, accountNumber)
+	return r.SavingService.InqAccountSaving(ctx, accountNumber)
 }
 
 // Mutation returns MutationResolver implementation.
