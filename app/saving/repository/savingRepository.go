@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"sync"
 	"time"
 )
 
@@ -29,28 +30,46 @@ func (s *SavingRepository) Insert(ctx context.Context, entity *saving.Saving) (*
 		return nil, err
 	}
 
-	saving, err := s.GetByAccountNumber(ctx, entity.AccountNumber)
+	wg := &sync.WaitGroup{}
+	savingChan, errChan := make(chan saving.Saving, 1), make(chan error, 1)
+
+	wg.Add(1)
+	go s.GetByAccountNumber(ctx, wg, savingChan, errChan, entity.AccountNumber)
+	wg.Wait()
+
+	err = <-errChan
+	saving := <-savingChan
 	if err != nil {
 		return nil, err
 	}
 
 	// success insert
-	return saving, nil
+	return &saving, nil
 }
 
-func (s *SavingRepository) GetByAccountNumber(ctx context.Context, accountNumber string) (*saving.Saving, error) {
+func (s *SavingRepository) GetByAccountNumber(ctx context.Context, wg *sync.WaitGroup, resChan chan saving.Saving, errChan chan error, accountNumber string) {
+	defer wg.Done()
 	query := "SELECT account_number, account_type, branch_code, short_name, currency, cbal, hold, opening_date, product_group, product_name, status FROM saving WHERE account_number=$1"
 
 	row := s.DB.QueryRowContext(ctx, query, accountNumber)
 	if row.Err() != nil {
-		return nil, errors.New("record not found")
+		resChan <- saving.Saving{}
+		errChan <- errors.New("record not found")
+		return
 	}
 
-	var saving saving.Saving
-	if err := row.Scan(&saving.AccountNumber, &saving.AccountType, &saving.BranchCode, &saving.ShortName, &saving.Currency, &saving.Cbal, &saving.Hold, &saving.OpeningDate, &saving.ProductGroup, &saving.ProductName, &saving.Status); err != nil {
-		return nil, err
+	var sv saving.Saving
+	if err := row.Scan(&sv.AccountNumber, &sv.AccountType, &sv.BranchCode, &sv.ShortName, &sv.Currency, &sv.Cbal, &sv.Hold, &sv.OpeningDate, &sv.ProductGroup, &sv.ProductName, &sv.Status); err != nil {
+		resChan <- saving.Saving{}
+		errChan <- errors.New("record not found")
+		return
 	}
 
 	// success
-	return &saving, nil
+	resChan <- sv
+	errChan <- nil
+}
+
+func (s *SavingRepository) UpdateCbal(ctx context.Context, wg *sync.WaitGroup, errChan chan error, accountNumber string, cbal float64) {
+
 }

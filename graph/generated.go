@@ -80,10 +80,28 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateAccount func(childComplexity int, uname string, pass string) int
-		InsertSaving  func(childComplexity int, input model.InsertSavingRequest) int
-		Login         func(childComplexity int, uname string, pass string, idNum string, deviceID string) int
-		Logout        func(childComplexity int, refreshToken string) int
+		CreateAccount    func(childComplexity int, uname string, pass string) int
+		InsertSaving     func(childComplexity int, input model.InsertSavingRequest) int
+		Login            func(childComplexity int, uname string, pass string, idNum string, deviceID string) int
+		Logout           func(childComplexity int, refreshToken string) int
+		OverbookingLocal func(childComplexity int, overbookingInputParams model.OvbRequest) int
+	}
+
+	OvbResponse struct {
+		AccountCredit  func(childComplexity int) int
+		AccountDebit   func(childComplexity int) int
+		AmountTrx      func(childComplexity int) int
+		CurrencyCredit func(childComplexity int) int
+		CurrencyDebit  func(childComplexity int) int
+		DateTrx        func(childComplexity int) int
+		NameCredit     func(childComplexity int) int
+		NameDebit      func(childComplexity int) int
+		Remark         func(childComplexity int) int
+		StatusCode     func(childComplexity int) int
+		StatusCredit   func(childComplexity int) int
+		StatusDebit    func(childComplexity int) int
+		StatusDesc     func(childComplexity int) int
+		Trrefn         func(childComplexity int) int
 	}
 
 	Query struct {
@@ -97,6 +115,7 @@ type MutationResolver interface {
 	Login(ctx context.Context, uname string, pass string, idNum string, deviceID string) (*model.LoginResponse, error)
 	Logout(ctx context.Context, refreshToken string) (string, error)
 	InsertSaving(ctx context.Context, input model.InsertSavingRequest) (*model.InqAccountSaving, error)
+	OverbookingLocal(ctx context.Context, overbookingInputParams model.OvbRequest) (*model.OvbResponse, error)
 }
 type QueryResolver interface {
 	Account(ctx context.Context, uname string) (*model.AccountResponse, error)
@@ -310,6 +329,116 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Logout(childComplexity, args["refresh_token"].(string)), true
 
+	case "Mutation.overbookingLocal":
+		if e.complexity.Mutation.OverbookingLocal == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_overbookingLocal_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OverbookingLocal(childComplexity, args["overbookingInputParams"].(model.OvbRequest)), true
+
+	case "OvbResponse.accountCredit":
+		if e.complexity.OvbResponse.AccountCredit == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.AccountCredit(childComplexity), true
+
+	case "OvbResponse.accountDebit":
+		if e.complexity.OvbResponse.AccountDebit == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.AccountDebit(childComplexity), true
+
+	case "OvbResponse.amountTrx":
+		if e.complexity.OvbResponse.AmountTrx == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.AmountTrx(childComplexity), true
+
+	case "OvbResponse.currencyCredit":
+		if e.complexity.OvbResponse.CurrencyCredit == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.CurrencyCredit(childComplexity), true
+
+	case "OvbResponse.currencyDebit":
+		if e.complexity.OvbResponse.CurrencyDebit == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.CurrencyDebit(childComplexity), true
+
+	case "OvbResponse.dateTrx":
+		if e.complexity.OvbResponse.DateTrx == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.DateTrx(childComplexity), true
+
+	case "OvbResponse.nameCredit":
+		if e.complexity.OvbResponse.NameCredit == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.NameCredit(childComplexity), true
+
+	case "OvbResponse.nameDebit":
+		if e.complexity.OvbResponse.NameDebit == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.NameDebit(childComplexity), true
+
+	case "OvbResponse.remark":
+		if e.complexity.OvbResponse.Remark == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.Remark(childComplexity), true
+
+	case "OvbResponse.statusCode":
+		if e.complexity.OvbResponse.StatusCode == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.StatusCode(childComplexity), true
+
+	case "OvbResponse.statusCredit":
+		if e.complexity.OvbResponse.StatusCredit == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.StatusCredit(childComplexity), true
+
+	case "OvbResponse.statusDebit":
+		if e.complexity.OvbResponse.StatusDebit == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.StatusDebit(childComplexity), true
+
+	case "OvbResponse.statusDesc":
+		if e.complexity.OvbResponse.StatusDesc == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.StatusDesc(childComplexity), true
+
+	case "OvbResponse.trrefn":
+		if e.complexity.OvbResponse.Trrefn == nil {
+			break
+		}
+
+		return e.complexity.OvbResponse.Trrefn(childComplexity), true
+
 	case "Query.account":
 		if e.complexity.Query.Account == nil {
 			break
@@ -343,6 +472,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputInsertSavingRequest,
+		ec.unmarshalInputOvbRequest,
 	)
 	first := true
 
@@ -552,6 +682,21 @@ func (ec *executionContext) field_Mutation_logout_args(ctx context.Context, rawA
 		}
 	}
 	args["refresh_token"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_overbookingLocal_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OvbRequest
+	if tmp, ok := rawArgs["overbookingInputParams"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("overbookingInputParams"))
+		arg0, err = ec.unmarshalNOvbRequest2brimobileᚋgraphᚋmodelᚐOvbRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["overbookingInputParams"] = arg0
 	return args, nil
 }
 
@@ -1774,6 +1919,707 @@ func (ec *executionContext) fieldContext_Mutation_insertSaving(ctx context.Conte
 	if fc.Args, err = ec.field_Mutation_insertSaving_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_overbookingLocal(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_overbookingLocal(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OverbookingLocal(rctx, fc.Args["overbookingInputParams"].(model.OvbRequest))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.OvbResponse)
+	fc.Result = res
+	return ec.marshalNOvbResponse2ᚖbrimobileᚋgraphᚋmodelᚐOvbResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_overbookingLocal(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "statusCode":
+				return ec.fieldContext_OvbResponse_statusCode(ctx, field)
+			case "statusDesc":
+				return ec.fieldContext_OvbResponse_statusDesc(ctx, field)
+			case "accountDebit":
+				return ec.fieldContext_OvbResponse_accountDebit(ctx, field)
+			case "nameDebit":
+				return ec.fieldContext_OvbResponse_nameDebit(ctx, field)
+			case "statusDebit":
+				return ec.fieldContext_OvbResponse_statusDebit(ctx, field)
+			case "accountCredit":
+				return ec.fieldContext_OvbResponse_accountCredit(ctx, field)
+			case "nameCredit":
+				return ec.fieldContext_OvbResponse_nameCredit(ctx, field)
+			case "statusCredit":
+				return ec.fieldContext_OvbResponse_statusCredit(ctx, field)
+			case "amountTrx":
+				return ec.fieldContext_OvbResponse_amountTrx(ctx, field)
+			case "remark":
+				return ec.fieldContext_OvbResponse_remark(ctx, field)
+			case "dateTrx":
+				return ec.fieldContext_OvbResponse_dateTrx(ctx, field)
+			case "trrefn":
+				return ec.fieldContext_OvbResponse_trrefn(ctx, field)
+			case "currencyDebit":
+				return ec.fieldContext_OvbResponse_currencyDebit(ctx, field)
+			case "currencyCredit":
+				return ec.fieldContext_OvbResponse_currencyCredit(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OvbResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_overbookingLocal_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_statusCode(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_statusCode(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StatusCode, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_statusCode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_statusDesc(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_statusDesc(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StatusDesc, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_statusDesc(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_accountDebit(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_accountDebit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AccountDebit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_accountDebit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_nameDebit(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_nameDebit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NameDebit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_nameDebit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_statusDebit(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_statusDebit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StatusDebit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_statusDebit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_accountCredit(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_accountCredit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AccountCredit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_accountCredit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_nameCredit(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_nameCredit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NameCredit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_nameCredit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_statusCredit(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_statusCredit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StatusCredit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_statusCredit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_amountTrx(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_amountTrx(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AmountTrx, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_amountTrx(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_remark(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_remark(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Remark, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_remark(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_dateTrx(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_dateTrx(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DateTrx, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_dateTrx(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_trrefn(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_trrefn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Trrefn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_trrefn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_currencyDebit(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_currencyDebit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CurrencyDebit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_currencyDebit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OvbResponse_currencyCredit(ctx context.Context, field graphql.CollectedField, obj *model.OvbResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OvbResponse_currencyCredit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CurrencyCredit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OvbResponse_currencyCredit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OvbResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -3869,6 +4715,89 @@ func (ec *executionContext) unmarshalInputInsertSavingRequest(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputOvbRequest(ctx context.Context, obj interface{}) (model.OvbRequest, error) {
+	var it model.OvbRequest
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"channelId", "accountDebit", "currencyDebit", "accountCredit", "currencyCredit", "amountTrx", "remark"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "channelId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("channelId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ChannelID = data
+		case "accountDebit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountDebit"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AccountDebit = data
+		case "currencyDebit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyDebit"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyDebit = data
+		case "accountCredit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountCredit"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AccountCredit = data
+		case "currencyCredit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyCredit"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyCredit = data
+		case "amountTrx":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amountTrx"))
+			data, err := ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AmountTrx = data
+		case "remark":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("remark"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Remark = data
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -4157,6 +5086,117 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_insertSaving(ctx, field)
 			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "overbookingLocal":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_overbookingLocal(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var ovbResponseImplementors = []string{"OvbResponse"}
+
+func (ec *executionContext) _OvbResponse(ctx context.Context, sel ast.SelectionSet, obj *model.OvbResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, ovbResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OvbResponse")
+		case "statusCode":
+			out.Values[i] = ec._OvbResponse_statusCode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "statusDesc":
+			out.Values[i] = ec._OvbResponse_statusDesc(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "accountDebit":
+			out.Values[i] = ec._OvbResponse_accountDebit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "nameDebit":
+			out.Values[i] = ec._OvbResponse_nameDebit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "statusDebit":
+			out.Values[i] = ec._OvbResponse_statusDebit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "accountCredit":
+			out.Values[i] = ec._OvbResponse_accountCredit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "nameCredit":
+			out.Values[i] = ec._OvbResponse_nameCredit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "statusCredit":
+			out.Values[i] = ec._OvbResponse_statusCredit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "amountTrx":
+			out.Values[i] = ec._OvbResponse_amountTrx(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "remark":
+			out.Values[i] = ec._OvbResponse_remark(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dateTrx":
+			out.Values[i] = ec._OvbResponse_dateTrx(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "trrefn":
+			out.Values[i] = ec._OvbResponse_trrefn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currencyDebit":
+			out.Values[i] = ec._OvbResponse_currencyDebit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currencyCredit":
+			out.Values[i] = ec._OvbResponse_currencyCredit(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4646,6 +5686,21 @@ func (ec *executionContext) marshalNCreateAccountResponse2ᚖbrimobileᚋgraph�
 	return ec._CreateAccountResponse(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	res := graphql.MarshalFloatContext(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return graphql.WrapContextMarshaler(ctx, res)
+}
+
 func (ec *executionContext) marshalNInqAccountSaving2brimobileᚋgraphᚋmodelᚐInqAccountSaving(ctx context.Context, sel ast.SelectionSet, v model.InqAccountSaving) graphql.Marshaler {
 	return ec._InqAccountSaving(ctx, sel, &v)
 }
@@ -4692,6 +5747,25 @@ func (ec *executionContext) marshalNLoginResponse2ᚖbrimobileᚋgraphᚋmodel�
 		return graphql.Null
 	}
 	return ec._LoginResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNOvbRequest2brimobileᚋgraphᚋmodelᚐOvbRequest(ctx context.Context, v interface{}) (model.OvbRequest, error) {
+	res, err := ec.unmarshalInputOvbRequest(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOvbResponse2brimobileᚋgraphᚋmodelᚐOvbResponse(ctx context.Context, sel ast.SelectionSet, v model.OvbResponse) graphql.Marshaler {
+	return ec._OvbResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNOvbResponse2ᚖbrimobileᚋgraphᚋmodelᚐOvbResponse(ctx context.Context, sel ast.SelectionSet, v *model.OvbResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._OvbResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

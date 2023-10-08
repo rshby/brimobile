@@ -9,9 +9,9 @@ import (
 	"time"
 )
 
-var DB *sql.DB
+//var DB *sql.DB
 
-func ConnectDB() {
+func ConnectDB() *sql.DB {
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbUser := os.Getenv("DB_USERNAME")
@@ -32,5 +32,5 @@ func ConnectDB() {
 	db.SetConnMaxLifetime(1 * time.Hour)
 	db.SetConnMaxIdleTime(30 * time.Minute)
 
-	DB = db
+	return db
 }

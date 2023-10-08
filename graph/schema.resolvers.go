@@ -29,6 +29,11 @@ func (r *mutationResolver) InsertSaving(ctx context.Context, input model.InsertS
 	return r.SavingService.Insert(ctx, input)
 }
 
+// OverbookingLocal is the resolver for the overbookingLocal field.
+func (r *mutationResolver) OverbookingLocal(ctx context.Context, overbookingInputParams model.OvbRequest) (*model.OvbResponse, error) {
+	return r.SavingService.OverbookingLocal(ctx, overbookingInputParams)
+}
+
 // Account is the resolver for the account field.
 func (r *queryResolver) Account(ctx context.Context, uname string) (*model.AccountResponse, error) {
 	return r.AccService.Account(ctx, uname)

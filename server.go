@@ -35,12 +35,12 @@ func main() {
 		port = defaultPort
 	}
 
-	connection.ConnectDB()
-	defer connection.DB.Close()
+	db := connection.ConnectDB()
+	defer db.Close()
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
-		AccService:    service.NewAccountService(repository.NewAccountRepository(connection.DB)),
-		SavingService: savingService.NewSavingService(repository2.NewSavingRepository(connection.DB)),
+		AccService:    service.NewAccountService(repository.NewAccountRepository(db)),
+		SavingService: savingService.NewSavingService(repository2.NewSavingRepository(db)),
 	}}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/graphql"))

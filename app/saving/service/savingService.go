@@ -6,8 +6,11 @@ import (
 	"brimobile/app/saving/repository"
 	"brimobile/graph/model"
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
+	"sync"
 )
 
 type SavingService struct {
@@ -59,7 +62,19 @@ func (s *SavingService) Insert(ctx context.Context, input model.InsertSavingRequ
 
 // method inquiry saving
 func (s *SavingService) InqAccountSaving(ctx context.Context, accountNumber string) (*model.InqAccountSaving, error) {
-	saving, err := s.SavingRepo.GetByAccountNumber(ctx, accountNumber)
+	wg := &sync.WaitGroup{}
+	savingChan, errChan := make(chan saving.Saving, 1), make(chan error, 1)
+
+	defer func() {
+		close(savingChan)
+		close(errChan)
+	}()
+
+	wg.Add(1)
+	go s.SavingRepo.GetByAccountNumber(ctx, wg, savingChan, errChan, accountNumber)
+	saving, err := <-savingChan, <-errChan
+	wg.Wait()
+
 	if err != nil {
 		return nil, err
 	}
@@ -81,4 +96,55 @@ func (s *SavingService) InqAccountSaving(ctx context.Context, accountNumber stri
 		CurrentBalance:   fmt.Sprintf("%.7f", cbal),
 		ShortName:        saving.ShortName,
 	}, nil
+}
+
+func (s *SavingService) OverbookingLocal(ctx context.Context, overbookingInputParams model.OvbRequest) (*model.OvbResponse, error) {
+	wg := &sync.WaitGroup{}
+
+	// cek data rekening pengirim dan penerima
+	reqChan, benefChan := make(chan saving.Saving, 1), make(chan saving.Saving, 1)
+	errReqChan, errBenefChan := make(chan error, 1), make(chan error, 1)
+
+	defer func() {
+		close(reqChan)
+		close(benefChan)
+		close(errReqChan)
+		close(errBenefChan)
+	}()
+
+	wg.Add(2)
+	go s.SavingRepo.GetByAccountNumber(ctx, wg, reqChan, errReqChan, overbookingInputParams.AccountDebit)
+	go s.SavingRepo.GetByAccountNumber(ctx, wg, benefChan, errBenefChan, overbookingInputParams.AccountCredit)
+
+	req, benef := <-reqChan, <-benefChan
+	errReq, errBenef := <-errReqChan, <-errBenefChan
+	wg.Wait()
+
+	fmt.Println(req)
+	fmt.Println(benef)
+
+	// cek reuestor dan benef
+	if errReq != nil {
+		return nil, errors.New("requestor not found")
+	}
+
+	if errBenef != nil {
+		return nil, errors.New("beneficiary not found")
+	}
+
+	/*
+		// set saldo setelah transaksi
+		cbalReq, _ := strconv.ParseFloat(req.Cbal, 64)
+		var reqCbal float64 = cbalReq - overbookingInputParams.AmountTrx
+
+		cbalBenef, _ := strconv.ParseFloat(benef.Cbal, 64)
+		var benefCBal float64 = cbalBenef + overbookingInputParams.AmountTrx
+	*/
+
+	// update
+
+	return &model.OvbResponse{
+		StatusCode: http.StatusOK,
+		StatusDesc: "ok",
+	}, nil // sengaja dulu
 }

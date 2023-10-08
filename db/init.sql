@@ -35,3 +35,11 @@ CREATE TABLE "brinjournalseq" (
 CREATE INDEX ON "saving" ("account_number");
 
 CREATE INDEX ON "brinjournalseq" ("branch_code");
+
+INSERT INTO accounts(uname, pass, access_token, refresh_token) VALUES
+                                                                   ('deo', '123', null, null),
+                                                                   ('reo', '123', null, null);
+
+INSERT INTO saving (account_number, account_type, branch_code, short_name, currency, cbal, hold, opening_date, product_group, product_name, status) VALUES
+                ('045202000001809', 'S', '0999', 'deo', 'USD', '500.00', '00.00', '2020-10-10 10:00:00', '10001', 'Britama Saving', '1'),
+                ('045202000001808', 'S', '0999', 'reo', 'USD', '500.00', '00.00', '2020-10-10 10:00:00', '10001', 'Britama Saving', '1');

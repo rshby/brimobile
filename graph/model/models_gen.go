@@ -39,3 +39,30 @@ type LoginResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }
+
+type OvbRequest struct {
+	ChannelID      string  `json:"channelId"`
+	AccountDebit   string  `json:"accountDebit"`
+	CurrencyDebit  string  `json:"currencyDebit"`
+	AccountCredit  string  `json:"accountCredit"`
+	CurrencyCredit string  `json:"currencyCredit"`
+	AmountTrx      float64 `json:"amountTrx"`
+	Remark         string  `json:"remark"`
+}
+
+type OvbResponse struct {
+	StatusCode     int    `json:"statusCode"`
+	StatusDesc     string `json:"statusDesc"`
+	AccountDebit   string `json:"accountDebit"`
+	NameDebit      string `json:"nameDebit"`
+	StatusDebit    string `json:"statusDebit"`
+	AccountCredit  string `json:"accountCredit"`
+	NameCredit     string `json:"nameCredit"`
+	StatusCredit   string `json:"statusCredit"`
+	AmountTrx      string `json:"amountTrx"`
+	Remark         string `json:"remark"`
+	DateTrx        string `json:"dateTrx"`
+	Trrefn         string `json:"trrefn"`
+	CurrencyDebit  string `json:"currencyDebit"`
+	CurrencyCredit string `json:"currencyCredit"`
+}

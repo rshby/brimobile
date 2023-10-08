@@ -40,6 +40,33 @@ input InsertSavingRequest{
   cbal: String!
 }
 
+input OvbRequest {
+  channelId: String!
+  accountDebit: String!
+  currencyDebit: String!
+  accountCredit: String!
+  currencyCredit: String!
+  amountTrx: Float!
+  remark: String!
+}
+
+type OvbResponse {
+  statusCode: Int!
+  statusDesc: String!
+  accountDebit: String!
+  nameDebit: String!
+  statusDebit: String!
+  accountCredit: String!
+  nameCredit: String!
+  statusCredit: String!
+  amountTrx: String!
+  remark: String!
+  dateTrx: String!
+  trrefn: String!
+  currencyDebit: String!
+  currencyCredit: String!
+}
+
 type Query{
   account(uname: String!): AccountResponse!
   inqAccountSaving(accountNumber: String!): InqAccountSaving!
@@ -50,4 +77,5 @@ type Mutation {
   login(uname: String!, pass: String!, idNum: String!, deviceId: String!): LoginResponse!
   logout(refresh_token: String!): String!
   insertSaving(input: InsertSavingRequest!): InqAccountSaving!
+  overbookingLocal(overbookingInputParams: OvbRequest!): OvbResponse!
 }
