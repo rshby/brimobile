@@ -14,5 +14,5 @@ docker-compose up -d
 ```
 **4. App and Database will ready to use** <br>
 This app will use port `7130` on your local computer. <br>
-The database name is `brimoveapp`, and it will expose port 5432 since it uses PostgreSQL. Inside the database, one table have already been created : `accounts`
+The database name is `brimoveapp`, and it will expose port 5432 since it uses PostgreSQL. Inside the database, three tables have already been created : `accounts`, `saving`, and `brinjournalseq`
 
