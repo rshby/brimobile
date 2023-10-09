@@ -22,6 +22,22 @@ services:
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    restart: always
+    networks:
+      - brimove-network
+    ports:
+      - target: 16686
+        published: 16686
+        protocol: tcp
+        mode: host
+      - target: 6831
+        published: 6831
+        protocol: udp
+        mode: host
+
   brimobile:
     build: .
     ports:
@@ -34,3 +50,7 @@ services:
       - brimove-network
     depends_on:
       - postgresdb
+      - jaeger
+    environment:
+      - DB_HOST=postgres_brimove
+      - JAEGER_HOST=jaeger

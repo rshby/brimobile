@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/opentracing/opentracing-go"
 	"sync"
 	"time"
 )
@@ -22,11 +23,14 @@ func NewSavingRepository(db *sql.DB) *SavingRepository {
 }
 
 func (s *SavingRepository) Insert(ctx context.Context, entity *saving.Saving) (*saving.Saving, error) {
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "repository Insert Saving")
+	defer span.Finish()
+
 	query := "INSERT INTO saving (account_number, account_type, branch_code, short_name, currency, cbal, hold, opening_date, product_group, product_name, status) VALUES ($1, 'S', '0999', $2, 'USD', $3, '0.00', $4, '10001', 'Britama Saving', '1');"
 
 	todayDate := time.Now().Local().Format("2006-01-02 15:04:05")
 
-	_, err := s.DB.ExecContext(ctx, query, entity.AccountNumber, entity.ShortName, entity.Cbal, todayDate)
+	_, err := s.DB.ExecContext(ctxTracing, query, entity.AccountNumber, entity.ShortName, entity.Cbal, todayDate)
 	if err != nil {
 		return nil, err
 	}
@@ -45,14 +49,18 @@ func (s *SavingRepository) Insert(ctx context.Context, entity *saving.Saving) (*
 	}
 
 	// success insert
+	span.SetTag("result_data", saving)
 	return &saving, nil
 }
 
 func (s *SavingRepository) GetByAccountNumber(ctx context.Context, wg *sync.WaitGroup, resChan chan saving.Saving, errChan chan error, accountNumber string) {
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "repository GetByAccountNumber")
+	defer span.Finish()
+
 	defer wg.Done()
 	query := "SELECT account_number, account_type, branch_code, short_name, currency, cbal, hold, opening_date, product_group, product_name, status FROM saving WHERE account_number=$1"
 
-	row := s.DB.QueryRowContext(ctx, query, accountNumber)
+	row := s.DB.QueryRowContext(ctxTracing, query, accountNumber)
 	if row.Err() != nil {
 		resChan <- saving.Saving{}
 		errChan <- errors.New("record not found")
@@ -66,17 +74,26 @@ func (s *SavingRepository) GetByAccountNumber(ctx context.Context, wg *sync.Wait
 		return
 	}
 
+	span.SetTag("result_data", sv)
+
 	// success
 	resChan <- sv
 	errChan <- nil
 }
 
 func (s *SavingRepository) UpdateCbal(ctx context.Context, wg *sync.WaitGroup, errChan chan error, accountNumber string, cbal float64) {
-	defer wg.Done()
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "repository UpdateCbal")
+	defer func() {
+		span.Finish()
+		wg.Done()
+	}()
+
+	span.SetTag("account_number", accountNumber)
+	span.SetTag("cbal", cbal)
 
 	query := "UPDATE saving set cbal=$1 where account_number=$2"
 
-	_, err := s.DB.ExecContext(ctx, query, fmt.Sprintf("%.7f", cbal), accountNumber)
+	_, err := s.DB.ExecContext(ctxTracing, query, fmt.Sprintf("%.7f", cbal), accountNumber)
 	if err != nil {
 		errChan <- err
 		return

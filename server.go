@@ -8,8 +8,10 @@ import (
 	savingService "brimobile/app/saving/service"
 	"brimobile/db/connection"
 	"brimobile/graph"
+	"brimobile/jaeger"
 	"fmt"
 	"github.com/joho/godotenv"
+	"github.com/opentracing/opentracing-go"
 	"log"
 	"net/http"
 	"os"
@@ -38,6 +40,10 @@ func main() {
 
 	db := connection.ConnectDB()
 	defer db.Close()
+
+	// register jaeger tracer
+	tracer, _, _ := jaeger.ConnecJaeger()
+	opentracing.SetGlobalTracer(tracer)
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
 		AccService:    service.NewAccountService(repository.NewAccountRepository(db)),

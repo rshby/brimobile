@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/opentracing/opentracing-go"
 	"net/http"
 	"strconv"
 	"sync"
@@ -30,6 +31,11 @@ func NewSavingService(svRepo repository.ISavingRepository, brinjournalRepo brinj
 
 // method insert
 func (s *SavingService) Insert(ctx context.Context, input model.InsertSavingRequest) (*model.InqAccountSaving, error) {
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "service Insert Saving")
+	defer span.Finish()
+
+	span.SetTag("request", input)
+
 	currentBal, _ := strconv.ParseFloat(input.Cbal, 64)
 
 	// create entity
@@ -40,7 +46,7 @@ func (s *SavingService) Insert(ctx context.Context, input model.InsertSavingRequ
 	}
 
 	// call repository insert
-	res, err := s.SavingRepo.Insert(ctx, &saving)
+	res, err := s.SavingRepo.Insert(ctxTracing, &saving)
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +72,11 @@ func (s *SavingService) Insert(ctx context.Context, input model.InsertSavingRequ
 
 // method inquiry saving
 func (s *SavingService) InqAccountSaving(ctx context.Context, accountNumber string) (*model.InqAccountSaving, error) {
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "service InqAccountSaving")
+	defer span.Finish()
+
+	span.SetTag("account_number", accountNumber)
+
 	wg := &sync.WaitGroup{}
 	savingChan, errChan := make(chan saving.Saving, 1), make(chan error, 1)
 
@@ -75,7 +86,7 @@ func (s *SavingService) InqAccountSaving(ctx context.Context, accountNumber stri
 	}()
 
 	wg.Add(1)
-	go s.SavingRepo.GetByAccountNumber(ctx, wg, savingChan, errChan, accountNumber)
+	go s.SavingRepo.GetByAccountNumber(ctxTracing, wg, savingChan, errChan, accountNumber)
 	saving, err := <-savingChan, <-errChan
 	wg.Wait()
 
@@ -104,6 +115,11 @@ func (s *SavingService) InqAccountSaving(ctx context.Context, accountNumber stri
 
 // method overbooking
 func (s *SavingService) OverbookingLocal(ctx context.Context, overbookingInputParams model.OvbRequest) (*model.OvbResponse, error) {
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "service OverbookingLocal")
+	defer span.Finish()
+
+	span.SetTag("request", overbookingInputParams)
+
 	wg := &sync.WaitGroup{}
 
 	// cek data rekening pengirim dan penerima
@@ -117,8 +133,8 @@ func (s *SavingService) OverbookingLocal(ctx context.Context, overbookingInputPa
 	}()
 
 	wg.Add(2)
-	go s.SavingRepo.GetByAccountNumber(ctx, wg, reqChan, errReqChan, overbookingInputParams.AccountDebit)
-	go s.SavingRepo.GetByAccountNumber(ctx, wg, benefChan, errBenefChan, overbookingInputParams.AccountCredit)
+	go s.SavingRepo.GetByAccountNumber(ctxTracing, wg, reqChan, errReqChan, overbookingInputParams.AccountDebit)
+	go s.SavingRepo.GetByAccountNumber(ctxTracing, wg, benefChan, errBenefChan, overbookingInputParams.AccountCredit)
 	req, benef := <-reqChan, <-benefChan
 	errReq, errBenef := <-errReqChan, <-errBenefChan
 	wg.Wait()
@@ -153,8 +169,8 @@ func (s *SavingService) OverbookingLocal(ctx context.Context, overbookingInputPa
 	}()
 
 	wg.Add(2)
-	go s.SavingRepo.UpdateCbal(ctx, wg, errChanUpdateReq, req.AccountNumber, reqCbal)
-	go s.SavingRepo.UpdateCbal(ctx, wg, errChanUpdateBenef, benef.AccountNumber, benefCbal)
+	go s.SavingRepo.UpdateCbal(ctxTracing, wg, errChanUpdateReq, req.AccountNumber, reqCbal)
+	go s.SavingRepo.UpdateCbal(ctxTracing, wg, errChanUpdateBenef, benef.AccountNumber, benefCbal)
 
 	errUpdateReq, errUpdateBenef := <-errChanUpdateReq, <-errChanUpdateBenef
 	wg.Wait()
@@ -193,6 +209,7 @@ func (s *SavingService) OverbookingLocal(ctx context.Context, overbookingInputPa
 	}
 
 	// success transaction
+	span.SetTag("trrefn", trRefn)
 	return &model.OvbResponse{
 		StatusCode:     http.StatusOK,
 		StatusDesc:     "ok",

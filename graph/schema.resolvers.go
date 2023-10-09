@@ -7,6 +7,9 @@ package graph
 import (
 	"brimobile/graph/model"
 	"context"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"time"
 )
 
 // CreateAccount is the resolver for the createAccount field.
@@ -26,12 +29,22 @@ func (r *mutationResolver) Logout(ctx context.Context, refreshToken string) (str
 
 // InsertSaving is the resolver for the insertSaving field.
 func (r *mutationResolver) InsertSaving(ctx context.Context, input model.InsertSavingRequest) (*model.InqAccountSaving, error) {
-	return r.SavingService.Insert(ctx, input)
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "resolver InsertSaving")
+	defer span.Finish()
+
+	span.SetTag("request", input)
+
+	return r.SavingService.Insert(ctxTracing, input)
 }
 
 // OverbookingLocal is the resolver for the overbookingLocal field.
 func (r *mutationResolver) OverbookingLocal(ctx context.Context, overbookingInputParams model.OvbRequest) (*model.OvbResponse, error) {
-	return r.SavingService.OverbookingLocal(ctx, overbookingInputParams)
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "resolver OverbookingLocal")
+	defer span.Finish()
+
+	span.SetTag("request", overbookingInputParams)
+
+	return r.SavingService.OverbookingLocal(ctxTracing, overbookingInputParams)
 }
 
 // Account is the resolver for the account field.
@@ -41,7 +54,15 @@ func (r *queryResolver) Account(ctx context.Context, uname string) (*model.Accou
 
 // InqAccountSaving is the resolver for the inqAccountSaving field.
 func (r *queryResolver) InqAccountSaving(ctx context.Context, accountNumber string) (*model.InqAccountSaving, error) {
-	return r.SavingService.InqAccountSaving(ctx, accountNumber)
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "resolver InqAccountSaving")
+	span.SetTag("account_number", accountNumber)
+	span.LogFields(
+		log.String("acc", accountNumber),
+		log.String("time", time.Now().Format("15:04:05")),
+	)
+	defer span.Finish()
+
+	return r.SavingService.InqAccountSaving(ctxTracing, accountNumber)
 }
 
 // Mutation returns MutationResolver implementation.
