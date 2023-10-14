@@ -2,14 +2,20 @@ package helper
 
 import (
 	"brimobile/app/auth"
+	"context"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"os"
 	"sync"
 	"time"
 )
 
-func GenerateToken(uname string, hour time.Duration, wg *sync.WaitGroup, token chan<- string) (string, error) {
+func GenerateToken(ctx context.Context, uname string, hour time.Duration, wg *sync.WaitGroup, token chan<- string) (string, error) {
 	defer wg.Done()
+
+	span, _ := opentracing.StartSpanFromContext(ctx, "GenerateToken")
+	defer span.Finish()
 
 	// create claims
 	claims := auth.JwtClaims{
@@ -28,5 +34,9 @@ func GenerateToken(uname string, hour time.Duration, wg *sync.WaitGroup, token c
 
 	// success
 	token <- tokenString
+
+	span.LogFields(
+		log.Object("request-claims", claims),
+		log.String("response-token", tokenString))
 	return tokenString, nil
 }

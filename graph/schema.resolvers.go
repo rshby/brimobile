@@ -19,12 +19,27 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, uname string, pass
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, uname string, pass string, idNum string, deviceID string) (*model.LoginResponse, error) {
-	return r.AccService.Login(ctx, uname, pass, idNum, deviceID)
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "Resolver Login")
+	defer span.Finish()
+
+	span.LogFields(
+		log.String("uname", uname),
+		log.String("idNum", idNum),
+		log.String("deviceId", deviceID),
+	)
+
+	return r.AccService.Login(ctxTracing, uname, pass, idNum, deviceID)
 }
 
 // Logout is the resolver for the logout field.
 func (r *mutationResolver) Logout(ctx context.Context, refreshToken string) (string, error) {
-	return r.AccService.Logout(ctx, refreshToken)
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "Resolver Logout")
+	defer span.Finish()
+	span.LogFields(
+		log.String("refreshToken", refreshToken),
+	)
+
+	return r.AccService.Logout(ctxTracing, refreshToken)
 }
 
 // InsertSaving is the resolver for the insertSaving field.

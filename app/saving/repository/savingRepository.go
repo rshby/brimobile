@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"sync"
 	"time"
 )
@@ -74,7 +75,10 @@ func (s *SavingRepository) GetByAccountNumber(ctx context.Context, wg *sync.Wait
 		return
 	}
 
-	span.SetTag("result_data", sv)
+	span.LogFields(
+		log.String("request-accountNumber", accountNumber),
+		log.Object("response-saving", sv),
+	)
 
 	// success
 	resChan <- sv
@@ -88,9 +92,6 @@ func (s *SavingRepository) UpdateCbal(ctx context.Context, wg *sync.WaitGroup, e
 		wg.Done()
 	}()
 
-	span.SetTag("account_number", accountNumber)
-	span.SetTag("cbal", cbal)
-
 	query := "UPDATE saving set cbal=$1 where account_number=$2"
 
 	_, err := s.DB.ExecContext(ctxTracing, query, fmt.Sprintf("%.7f", cbal), accountNumber)
@@ -100,5 +101,10 @@ func (s *SavingRepository) UpdateCbal(ctx context.Context, wg *sync.WaitGroup, e
 	}
 
 	// success update
+	span.LogFields(
+		log.String("request-accountNumber", accountNumber),
+		log.Float64("cbal", cbal),
+		log.Object("response-error", nil),
+	)
 	errChan <- nil
 }

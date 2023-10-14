@@ -8,6 +8,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"sync"
 	"time"
 )
@@ -53,14 +55,17 @@ func (a *AccountService) CreateAccount(ctx context.Context, uname string, pass s
 }
 
 func (a *AccountService) Login(ctx context.Context, uname string, pass string, idNum string, deviceID string) (*model.LoginResponse, error) {
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "AccountService Login")
+	defer span.Finish()
+
 	// cek apakah uname ada di database
-	account, err := a.AccountRepo.GetByUname(ctx, uname)
+	account, err := a.AccountRepo.GetByUname(ctxTracing, uname)
 	if err != nil {
 		return nil, errors.New("record not found")
 	}
 
 	// cek apakah password benar
-	if !helper.CheckPassword(account.Pass, pass) {
+	if !helper.CheckPassword(ctxTracing, account.Pass, pass) {
 		return nil, errors.New("password not match")
 	}
 
@@ -69,47 +74,70 @@ func (a *AccountService) Login(ctx context.Context, uname string, pass string, i
 		return nil, errors.New("user has been logged in")
 	}
 
-	// lolos -> generate access_oken dan refresh_token
+	// lolos -> generate access_token dan refresh_token
 	wg := &sync.WaitGroup{}
 	accessToken := make(chan string, 1)
 	refreshToken := make(chan string, 1)
 
 	wg.Add(2)
-	go helper.GenerateToken(uname, time.Duration(1*time.Hour), wg, accessToken)
-	go helper.GenerateToken(uname, time.Duration(5*time.Hour), wg, refreshToken)
+	go helper.GenerateToken(ctxTracing, uname, time.Duration(1*time.Hour), wg, accessToken)
+	go helper.GenerateToken(ctxTracing, uname, time.Duration(5*time.Hour), wg, refreshToken)
 	wg.Wait()
 
 	// update access_token dan refresh_token by uname
 	accToken, refreshTkn := <-accessToken, <-refreshToken
-	err = a.AccountRepo.UpdateToken(ctx, uname, accToken, refreshTkn)
+	err = a.AccountRepo.UpdateToken(ctxTracing, uname, accToken, refreshTkn)
 	if err != nil {
 		return nil, err
 	}
 
 	// return response
-	return &model.LoginResponse{
+	response := model.LoginResponse{
 		time.Now().Format("2006-01-02 15:04:05"), accToken, refreshTkn,
-	}, nil
+	}
+	span.LogFields(
+		log.String("request-uname", uname),
+		log.String("request-pass", pass),
+		log.String("request-idNum", idNum),
+		log.String("request-deviceId", deviceID),
+		log.Object("response-login", response))
+	return &response, nil
 }
 
 func (a *AccountService) Logout(ctx context.Context, refreshToken string) (string, error) {
-	err := a.AccountRepo.DeleteToken(ctx, refreshToken)
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "AccountService Logout")
+	defer span.Finish()
+
+	err := a.AccountRepo.DeleteToken(ctxTracing, refreshToken)
 	if err != nil {
 		return "", errors.New("you are not logged in")
 	}
 
+	span.LogFields(
+		log.String("request-refreshToken", refreshToken),
+		log.String("response-message", "ok"),
+		log.Object("response-error", err),
+	)
 	return "ok", nil
 }
 
 func (a *AccountService) Account(ctx context.Context, uname string) (*model.AccountResponse, error) {
-	account, err := a.AccountRepo.GetByUname(ctx, uname)
+	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "AccountService Account")
+	defer span.Finish()
+
+	account, err := a.AccountRepo.GetByUname(ctxTracing, uname)
 	if err != nil {
 		return nil, errors.New("record not found")
 	}
 
-	return &model.AccountResponse{
+	response := model.AccountResponse{
 		ID:    account.Id,
 		Uname: account.Uname,
 		Pass:  account.Pass,
-	}, nil
+	}
+
+	span.LogFields(
+		log.String("request-uname", uname),
+		log.Object("response-account", response))
+	return &response, nil
 }

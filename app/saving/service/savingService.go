@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -75,8 +76,6 @@ func (s *SavingService) InqAccountSaving(ctx context.Context, accountNumber stri
 	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "service InqAccountSaving")
 	defer span.Finish()
 
-	span.SetTag("account_number", accountNumber)
-
 	wg := &sync.WaitGroup{}
 	savingChan, errChan := make(chan saving.Saving, 1), make(chan error, 1)
 
@@ -98,7 +97,7 @@ func (s *SavingService) InqAccountSaving(ctx context.Context, accountNumber stri
 	hold, _ := strconv.ParseFloat(saving.Hold, 64)
 
 	// success
-	return &model.InqAccountSaving{
+	response := model.InqAccountSaving{
 		AccountNumber:    saving.AccountNumber,
 		AvailableBalance: fmt.Sprintf("%.7f", (cbal - hold)),
 		AccountType:      saving.AccountType,
@@ -110,15 +109,18 @@ func (s *SavingService) InqAccountSaving(ctx context.Context, accountNumber stri
 		Status:           helper.StatusToString(saving.Status),
 		CurrentBalance:   fmt.Sprintf("%.7f", cbal),
 		ShortName:        saving.ShortName,
-	}, nil
+	}
+
+	span.LogFields(
+		log.String("account_number", accountNumber),
+		log.Object("response-saving", response))
+	return &response, nil
 }
 
 // method overbooking
 func (s *SavingService) OverbookingLocal(ctx context.Context, overbookingInputParams model.OvbRequest) (*model.OvbResponse, error) {
 	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "service OverbookingLocal")
 	defer span.Finish()
-
-	span.SetTag("request", overbookingInputParams)
 
 	wg := &sync.WaitGroup{}
 
@@ -191,7 +193,7 @@ func (s *SavingService) OverbookingLocal(ctx context.Context, overbookingInputPa
 	}()
 
 	wgb.Add(1)
-	go s.BrinJournalRepo.GetByBranch(ctx, wgb, brinjournalChan, errChanBrinjournal, "09999")
+	go s.BrinJournalRepo.GetByBranch(ctxTracing, wgb, brinjournalChan, errChanBrinjournal, "09999")
 	brinJournalData, errBrinJournal := <-brinjournalChan, <-errChanBrinjournal
 	wgb.Wait()
 	if errBrinJournal != nil {
@@ -204,13 +206,12 @@ func (s *SavingService) OverbookingLocal(ctx context.Context, overbookingInputPa
 	trRefn := fmt.Sprintf("%v%v%v0", helper.PadLeft(tellerId, 7), helper.PadLeft(dateToday, 6), helper.PadLeft(strconv.Itoa(brinJournalData.JournalSeq), 7))
 
 	// update brinjournal
-	if err := s.BrinJournalRepo.UpdateOne(ctx, "09999"); err != nil {
+	if err := s.BrinJournalRepo.UpdateOne(ctxTracing, "09999"); err != nil {
 		return nil, err
 	}
 
 	// success transaction
-	span.SetTag("trrefn", trRefn)
-	return &model.OvbResponse{
+	response := model.OvbResponse{
 		StatusCode:     http.StatusOK,
 		StatusDesc:     "ok",
 		AccountDebit:   req.AccountNumber,
@@ -225,5 +226,12 @@ func (s *SavingService) OverbookingLocal(ctx context.Context, overbookingInputPa
 		Trrefn:         trRefn,
 		CurrencyDebit:  req.Currency,
 		CurrencyCredit: req.Currency,
-	}, nil // sengaja dulu
+	}
+
+	span.LogFields(
+		log.Object("request", overbookingInputParams),
+		log.String("trrefn", trRefn),
+		log.Object("response-overbooking", response),
+	)
+	return &response, nil // sengaja dulu
 }
