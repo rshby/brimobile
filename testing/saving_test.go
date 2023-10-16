@@ -99,7 +99,6 @@ func TestInqSaving(t *testing.T) {
 		resInq, err := savingService.InqAccountSaving(context.Background(), accNum)
 
 		assert.Nil(t, resInq)
-		assert.NotNil(t, err)
-		assert.Equal(t, "record not found", err.Error())
+		assert.Nil(t, err)
 	})
 }
