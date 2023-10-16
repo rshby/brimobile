@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"testing"
 )
 
@@ -55,7 +56,7 @@ func TestGetByUname(t *testing.T) {
 	uname := "reo"
 
 	t.Run("test get by uname success", func(t *testing.T) {
-		accRepo.Mock.On("GetByUname", context.Background(), uname).Return(&account.Account{
+		accRepo.Mock.On("GetByUname", mock.Anything, uname).Return(&account.Account{
 			Id:    1,
 			Uname: uname,
 			Pass:  "123",
@@ -78,7 +79,7 @@ func TestGetByUname(t *testing.T) {
 
 	t.Run("test gey by uname not found", func(t *testing.T) {
 		uname = ""
-		accRepo.Mock.On("GetByUname", context.Background(), uname).Return(nil, errors.New("uname not set"))
+		accRepo.Mock.On("GetByUname", mock.Anything, uname).Return(nil, errors.New("uname not set"))
 
 		account, err := accService.Account(context.Background(), uname)
 
@@ -94,11 +95,15 @@ func TestLogin(t *testing.T) {
 	pass := "123"
 
 	t.Run("test login success", func(t *testing.T) {
-		accRepo.Mock.On("GetByUname", context.Background(), uname).Return(&account.Account{
+		var accRepo = mck.NewAccountRepoMock()
+		var accService = service.AccountService{accRepo}
+		accRepo.Mock.On("GetByUname", mock.Anything, uname).Return(&account.Account{
 			Id:    1,
 			Uname: uname,
 			Pass:  pass,
 		}, nil)
+
+		accRepo.Mock.On("UpdateToken", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 		result, err := accService.Login(context.Background(), uname, pass, "1", "mb")
 
@@ -107,7 +112,10 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("test login password not match", func(t *testing.T) {
-		accRepo.Mock.On("GetByUname", context.Background(), uname).Return(&account.Account{
+		var accRepo = mck.NewAccountRepoMock()
+		var accService = service.AccountService{accRepo}
+
+		accRepo.Mock.On("GetByUname", mock.Anything, uname).Return(&account.Account{
 			Id:    1,
 			Uname: uname,
 			Pass:  "P@ssw0rd",
@@ -119,14 +127,13 @@ func TestLogin(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.Equal(t, "password not match", err.Error())
 	})
-
 }
 
-// test Logour
+// test Logout
 func TestLogout(t *testing.T) {
 	t.Run("test logout success", func(t *testing.T) {
 		refreshToken := "qwerty123"
-		accRepo.Mock.On("DeleteToken", context.Background(), refreshToken).Return(nil)
+		accRepo.Mock.On("DeleteToken", mock.Anything, refreshToken).Return(nil)
 
 		res, err := accService.Logout(context.Background(), refreshToken)
 

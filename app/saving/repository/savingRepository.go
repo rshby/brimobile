@@ -58,6 +58,7 @@ func (s *SavingRepository) GetByAccountNumber(ctx context.Context, wg *sync.Wait
 	span, ctxTracing := opentracing.StartSpanFromContext(ctx, "repository GetByAccountNumber")
 	defer span.Finish()
 
+	wg.Add(1)
 	defer wg.Done()
 	query := "SELECT account_number, account_type, branch_code, short_name, currency, cbal, hold, opening_date, product_group, product_name, status FROM saving WHERE account_number=$1"
 

@@ -1,7 +1,7 @@
 package testing
 
 import (
-	"brimobile/app/mock"
+	mck "brimobile/app/mock"
 	"brimobile/app/saving"
 	"brimobile/app/saving/service"
 	"brimobile/graph/model"
@@ -9,11 +9,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"testing"
 )
-
-var savingRepo = mock.NewSavingRepositoryMock()
-var savingService = service.NewSavingService(savingRepo)
 
 // test insert saving
 func TestInsertSaving(t *testing.T) {
@@ -24,11 +22,11 @@ func TestInsertSaving(t *testing.T) {
 	}
 
 	t.Run("test insert success", func(t *testing.T) {
-		savingRepo.Mock.On("Insert", context.Background(), &entity).Return(&saving.Saving{
-			AccountNumber: entity.AccountNumber,
-			ShortName:     entity.ShortName,
-			Cbal:          entity.Cbal,
-		}, nil)
+		var savingRepo = mck.NewSavingRepositoryMock()
+		var brinjournalRepo = mck.NewBrinJournalMock()
+		var savingService = service.NewSavingService(savingRepo, brinjournalRepo)
+
+		savingRepo.Mock.On("Insert", mock.Anything, &entity).Return(&entity, nil)
 
 		res, err := savingService.Insert(context.Background(), model.InsertSavingRequest{
 			AccountNumber: entity.AccountNumber,
@@ -45,8 +43,12 @@ func TestInsertSaving(t *testing.T) {
 // test get by account_number
 func TestInqSaving(t *testing.T) {
 	accNum := "001"
-	t.Run("test inq success", func(t *testing.T) {
-		savingRepo.Mock.On("GetByAccountNumber", context.Background(), accNum).Return(&saving.Saving{
+	t.Run("test inq saving success", func(t *testing.T) {
+		var savingRepo = mck.NewSavingRepositoryMock()
+		var brinjournalRepo = mck.NewBrinJournalMock()
+		var savingService = service.NewSavingService(savingRepo, brinjournalRepo)
+
+		savingRepo.Mock.On("GetByAccountNumber", mock.Anything, mock.Anything, mock.Anything, mock.Anything, accNum).Return(saving.Saving{
 			AccountNumber: accNum,
 			AccountType:   "S",
 			ShortName:     "reo sahobby",
@@ -62,9 +64,12 @@ func TestInqSaving(t *testing.T) {
 	})
 
 	t.Run("test inq saving not found", func(t *testing.T) {
-		accNum = "002"
+		var savingRepo = mck.NewSavingRepositoryMock()
+		var brinjournalRepo = mck.NewBrinJournalMock()
+		var savingService = service.NewSavingService(savingRepo, brinjournalRepo)
 
-		savingRepo.Mock.On("GetByAccountNumber", context.Background(), accNum).Return(nil, errors.New("record not found"))
+		accNum = "002"
+		savingRepo.Mock.On("GetByAccountNumber", mock.Anything, mock.Anything, mock.Anything, mock.Anything, accNum).Return(saving.Saving{}, errors.New("record not found"))
 
 		resInq, err := savingService.InqAccountSaving(context.Background(), accNum)
 

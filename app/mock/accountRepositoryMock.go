@@ -28,9 +28,7 @@ func (a AccountRepositoryMock) DeleteToken(ctx context.Context, refreshToken str
 
 func (a AccountRepositoryMock) UpdateToken(ctx context.Context, uname string, accessToken string, refreshToken string) error {
 	args := a.Mock.Called(ctx, uname, accessToken, refreshToken)
-
-	err := args.Get(0).(error)
-	return err
+	return args.Error(0)
 }
 
 // implemented mock insert

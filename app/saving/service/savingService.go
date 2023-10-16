@@ -84,7 +84,6 @@ func (s *SavingService) InqAccountSaving(ctx context.Context, accountNumber stri
 		close(errChan)
 	}()
 
-	wg.Add(1)
 	go s.SavingRepo.GetByAccountNumber(ctxTracing, wg, savingChan, errChan, accountNumber)
 	saving, err := <-savingChan, <-errChan
 	wg.Wait()
@@ -134,7 +133,6 @@ func (s *SavingService) OverbookingLocal(ctx context.Context, overbookingInputPa
 		close(errBenefChan)
 	}()
 
-	wg.Add(2)
 	go s.SavingRepo.GetByAccountNumber(ctxTracing, wg, reqChan, errReqChan, overbookingInputParams.AccountDebit)
 	go s.SavingRepo.GetByAccountNumber(ctxTracing, wg, benefChan, errBenefChan, overbookingInputParams.AccountCredit)
 	req, benef := <-reqChan, <-benefChan
