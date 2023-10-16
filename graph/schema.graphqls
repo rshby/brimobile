@@ -69,7 +69,7 @@ type OvbResponse {
 
 type Query{
   account(uname: String!): AccountResponse!
-  inqAccountSaving(accountNumber: String!): InqAccountSaving!
+  inqAccountSaving(accountNumber: String!): InqAccountSaving
 }
 
 type Mutation {

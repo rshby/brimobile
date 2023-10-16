@@ -7,9 +7,10 @@ package graph
 import (
 	"brimobile/graph/model"
 	"context"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"time"
+
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // CreateAccount is the resolver for the createAccount field.

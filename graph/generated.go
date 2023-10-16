@@ -2708,14 +2708,11 @@ func (ec *executionContext) _Query_inqAccountSaving(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.InqAccountSaving)
 	fc.Result = res
-	return ec.marshalNInqAccountSaving2ᚖbrimobileᚋgraphᚋmodelᚐInqAccountSaving(ctx, field.Selections, res)
+	return ec.marshalOInqAccountSaving2ᚖbrimobileᚋgraphᚋmodelᚐInqAccountSaving(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_inqAccountSaving(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5274,9 +5271,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_inqAccountSaving(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -6060,6 +6054,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOInqAccountSaving2ᚖbrimobileᚋgraphᚋmodelᚐInqAccountSaving(ctx context.Context, sel ast.SelectionSet, v *model.InqAccountSaving) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._InqAccountSaving(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

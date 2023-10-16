@@ -89,7 +89,7 @@ func (s *SavingService) InqAccountSaving(ctx context.Context, accountNumber stri
 	wg.Wait()
 
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 
 	cbal, _ := strconv.ParseFloat(saving.Cbal, 64)
