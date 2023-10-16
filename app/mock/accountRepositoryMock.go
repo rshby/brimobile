@@ -16,14 +16,7 @@ func NewAccountRepoMock() *AccountRepositoryMock {
 }
 
 func (a AccountRepositoryMock) DeleteToken(ctx context.Context, refreshToken string) error {
-	args := a.Mock.Called(ctx, refreshToken)
-
-	// if not error
-	if err := args.Get(0); err == nil {
-		return nil
-	}
-
-	return args.Get(0).(error)
+	return a.Mock.Called(ctx, refreshToken).Error(0)
 }
 
 func (a AccountRepositoryMock) UpdateToken(ctx context.Context, uname string, accessToken string, refreshToken string) error {
