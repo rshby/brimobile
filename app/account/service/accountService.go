@@ -71,7 +71,14 @@ func (a *AccountService) Login(ctx context.Context, uname string, pass string, i
 
 	// cek apakah sudah login
 	if account.AccessToken.Valid {
-		return nil, errors.New("user has been logged in")
+		// cek dulu apakah sudah expired atau belum
+		token := account.RefreshToken.String
+		claims, _ := helper.GetClaims(ctxTracing, token)
+
+		// jika belum expired tapi user sudah login -> user sudah login
+		if !time.Now().Local().After(time.UnixMicro(claims.RegisteredClaims.ExpiresAt.Unix() * 1000000)) {
+			return nil, errors.New("user sudah login")
+		}
 	}
 
 	// lolos -> generate access_token dan refresh_token
@@ -80,8 +87,8 @@ func (a *AccountService) Login(ctx context.Context, uname string, pass string, i
 	refreshToken := make(chan string, 1)
 
 	wg.Add(2)
-	go helper.GenerateToken(ctxTracing, uname, time.Duration(1*time.Hour), wg, accessToken)
-	go helper.GenerateToken(ctxTracing, uname, time.Duration(5*time.Hour), wg, refreshToken)
+	go helper.GenerateToken(ctxTracing, uname, time.Duration(10*time.Minute), wg, accessToken)
+	go helper.GenerateToken(ctxTracing, uname, time.Duration(30*time.Minute), wg, refreshToken)
 	wg.Wait()
 
 	// update access_token dan refresh_token by uname

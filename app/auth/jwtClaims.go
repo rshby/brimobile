@@ -7,32 +7,26 @@ type JwtClaims struct {
 	RegisteredClaims jwt.RegisteredClaims
 }
 
-func (j JwtClaims) GetExpirationTime() (*jwt.NumericDate, error) {
-	//TODO implement me
-	panic("implement me")
+func (j *JwtClaims) GetExpirationTime() (*jwt.NumericDate, error) {
+	return j.RegisteredClaims.GetExpirationTime()
 }
 
-func (j JwtClaims) GetIssuedAt() (*jwt.NumericDate, error) {
-	//TODO implement me
-	panic("implement me")
+func (j *JwtClaims) GetIssuedAt() (*jwt.NumericDate, error) {
+	return j.RegisteredClaims.GetIssuedAt()
 }
 
-func (j JwtClaims) GetNotBefore() (*jwt.NumericDate, error) {
-	//TODO implement me
-	panic("implement me")
+func (j *JwtClaims) GetNotBefore() (*jwt.NumericDate, error) {
+	return j.RegisteredClaims.GetNotBefore()
 }
 
-func (j JwtClaims) GetIssuer() (string, error) {
-	//TODO implement me
-	panic("implement me")
+func (j *JwtClaims) GetIssuer() (string, error) {
+	return j.RegisteredClaims.GetIssuer()
 }
 
-func (j JwtClaims) GetSubject() (string, error) {
-	//TODO implement me
-	panic("implement me")
+func (j *JwtClaims) GetSubject() (string, error) {
+	return j.RegisteredClaims.GetSubject()
 }
 
-func (j JwtClaims) GetAudience() (jwt.ClaimStrings, error) {
-	//TODO implement me
-	panic("implement me")
+func (j *JwtClaims) GetAudience() (jwt.ClaimStrings, error) {
+	return j.RegisteredClaims.GetAudience()
 }

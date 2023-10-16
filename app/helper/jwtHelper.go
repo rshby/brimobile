@@ -26,7 +26,7 @@ func GenerateToken(ctx context.Context, uname string, hour time.Duration, wg *sy
 		},
 	}
 
-	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)
 	tokenString, err := tokenClaims.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	if err != nil {
 		return "", err
@@ -39,4 +39,18 @@ func GenerateToken(ctx context.Context, uname string, hour time.Duration, wg *sy
 		log.Object("request-claims", claims),
 		log.String("response-token", tokenString))
 	return tokenString, nil
+}
+
+func GetClaims(ctx context.Context, tokenString string) (auth.JwtClaims, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "Helper GetClaims")
+	defer span.Finish()
+
+	span.LogFields(
+		log.String("request-token", tokenString))
+	claims := auth.JwtClaims{}
+	_, _ = jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("SECRET_KEY")), nil
+	})
+
+	return claims, nil
 }
